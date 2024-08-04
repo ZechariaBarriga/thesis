@@ -1,0 +1,9 @@
+{'hidden_dim': 256,
+ 'lr': 0.0002362588471099862,
+ 'dropout': 0.3,
+ 'batch_size': 64}
+
+combined_smiles_dataset.zip
+
+temperature: 1.2
+smoothing_factor: 0.9

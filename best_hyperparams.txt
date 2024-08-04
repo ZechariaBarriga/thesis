@@ -1,0 +1,1 @@
+Score: 0.038, Parameters: {'hidden_dim': 256, 'lr': 0.0002362588471099862, 'dropout': 0.3, 'batch_size': 64}
