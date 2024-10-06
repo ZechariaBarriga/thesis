@@ -164,7 +164,7 @@ class TrainGAN(nn.Module):
         # baseline moving average
         with torch.no_grad():
             mean_reward = (R * y_pred_mask).sum() / y_pred_mask.sum()
-            self.b = 0.95 * self.b + (1 - 0.95) * mean_reward
+            self.b = 0.9 * self.b + (1 - 0.9) * mean_reward
 
         generator_loss.backward()
 
@@ -172,7 +172,7 @@ class TrainGAN(nn.Module):
 
         self.generator_optim.step()
 
-        return {'loss_disc': discr_loss.item(), 'mean_reward': mean_reward}
+        return {'loss_disc': discr_loss.item(), 'loss_gen': generator_loss.item(), 'mean_reward': mean_reward}
 
     def create_dataloader(self, data, batch_size=128, shuffle=True, num_workers=5):
         """create a dataloader
@@ -204,7 +204,7 @@ class TrainGAN(nn.Module):
         Args:
             step (int): Current training step
         """
-        save_path = f"models(test)/checkpoint_step_{step}"
+        save_path = f"models/checkpoint_step_{step}"
         os.makedirs(save_path, exist_ok=True)
 
         # Save generator and discriminator models
@@ -229,7 +229,7 @@ class TrainGAN(nn.Module):
 
         print(f"Model saved at step {step} in {save_path}.")
 
-    def train_n_steps(self, train_loader, max_step=10000, evaluate_every=50, save_every=20000):
+    def train_n_steps(self, train_loader, max_step=10000, evaluate_every=100, save_every=20000):
         """Train for max_step steps
 
         Args:
@@ -243,10 +243,10 @@ class TrainGAN(nn.Module):
         """
 
         iter_loader = iter(train_loader)
-        count = 2199
+        count = 0 
         score = None  # Initialize score
 
-        for step in range(220000, max_step): # range(max_step)
+        for step in range(max_step):
             try:
                 batch = next(iter_loader)
             except:
@@ -254,14 +254,14 @@ class TrainGAN(nn.Module):
                 batch = next(iter_loader)
 
             # Train step
-            self.train_step(batch)
+            losses = self.train_step(batch)
 
             if step % evaluate_every == 0:
                 self.eval()
-                score = self.evaluate_n(100)  # Evaluate the model
+                score = self.evaluate_n(100)
                 self.train()
                 count += 1
-                print(f'valid {count} = {score: .2f}')
+                print(f'disc_loss: {losses["loss_disc"]:.8f}, gen_loss: {losses["loss_gen"]:.8f}, valid {count} = {score: .2f}')
 
             if step % save_every == 0 and step != 0:
                 self.save_checkpoint(step)
